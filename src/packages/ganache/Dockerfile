@@ -1,5 +1,24 @@
 # use full node to install dependencies
 FROM node:14.17.4@sha256:cd98882c1093f758d09cf6821dc8f96b241073b38e8ed294ca1f9e484743858f AS builder
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY ./src/packages/ganache/entrypoint.sh /scripts/entrypoint.sh
+RUN chmod +x /scripts/entrypoint.sh
+RUN sed 's,LAST_UID=59999,LAST_UID=9999,' -i /etc/adduser.conf && \
+	sed 's,LAST_GID=59999,LAST_GID=9999,' -i /etc/adduser.conf && \
+	groupmod -g 9999 nogroup && \
+	usermod -g 9999 nobody && \
+	usermod -u 9999 nobody && \
+	usermod -g 9999 sync && \
+	usermod -g 9999 _apt
+
+RUN apt update && \
+    apt install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        gnupg2 \
+        software-properties-common \
+        bash
 
 WORKDIR /app
 
@@ -10,7 +29,7 @@ RUN npm run clean
 RUN npm ci --unsafe-perm
 
 # import INFURA_KEY environment variable (build-arg)
-ARG INFURA_KEY
+ENV CREATE_BROKEN_BUILD "I WILL NOT PUBLISH THIS"
 
 # build application
 RUN npm run build
@@ -34,5 +53,4 @@ ENV NODE_ENV production
 
 EXPOSE 8545
 
-# set the entrypoint
-ENTRYPOINT ["node", "/app/dist/node/cli.js"]
+ENTRYPOINT [ "/scripts/entrypoint.sh" ]
