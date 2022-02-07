@@ -20,22 +20,23 @@ RUN npx lerna exec --scope ganache -- npm prune --production
 
 # we use node "slim" instead of "alpine" until we create a uwebsockets build for alpine.
 FROM node:14.17.4-slim@sha256:766e2dcf4461582f7f750656807edbc28019753cecae92b1f2b25d13d3401ef3
-RUN apt update && \
-    apt install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-        gnupg2 \
-        software-properties-common \
-        bash
 ADD ./src/packages/ganache/entrypoint.sh /scripts/entrypoint.sh
 RUN chmod +x /scripts/entrypoint.sh
 RUN sed 's,LAST_UID=59999,LAST_UID=9999,' -i /etc/adduser.conf && \
-	sed 's,LAST_GID=59999,LAST_GID=9999,' -i /etc/adduser.conf && \
-	groupmod -g 9999 nogroup && \
-	usermod -g 9999 nobody && \
-	usermod -u 9999 nobody && \
-	usermod -g 9999 sync && \
-	usermod -g 9999 _apt
+    sed 's,LAST_GID=59999,LAST_GID=9999,' -i /etc/adduser.conf && \
+    groupmod -g 9999 nogroup && \
+    usermod -g 9999 nobody && \
+    usermod -u 9999 nobody && \
+    usermod -g 9999 sync && \
+    usermod -g 9999 _apt
+
+RUN apt update && \
+    apt install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    gnupg2 \
+    software-properties-common \
+    bash
 
 WORKDIR /app
 
